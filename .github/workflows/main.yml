@@ -1,0 +1,28 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@releases/v4
+        with:
+          branch: gh-pages
+          folder: build
+          clean: true
+          personal_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          cname: your-cname.com # Optional CNAME file for custom domains
+          user: Swayam-op # Your GitHub username
+          email: swayam.sahoo2019@gift.edu.in # Your GitHub email address
