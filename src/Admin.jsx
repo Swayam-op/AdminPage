@@ -37,7 +37,7 @@ const Admin = () => {
             }
         }
         viewPage();
-    }, [data]);
+    }, [data, viewPage]);
 
     const deleteItem = (id) => {
         let answer = prompt("Type 'Delete' to delete this item");
@@ -137,7 +137,7 @@ const Admin = () => {
           return () => {
             clearTimeout(timeoutId);
           };
-    },[searchValue, curPageNo])
+    },[searchValue, curPageNo, filterData])
 
     useEffect(()=>{
         const ids = deleteItems?.map((id)=>id);
@@ -148,6 +148,7 @@ const Admin = () => {
             else{
                 document.getElementById(item.id).checked = false;
             }
+            return;
         })
 
         //if all the item of the page is present in deleteItems then setsupercheckbox true
