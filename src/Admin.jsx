@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import Row from './Row'
 import { HiChevronDoubleLeft } from 'react-icons/hi';
 import { HiChevronDoubleRight } from 'react-icons/hi';
@@ -17,27 +17,7 @@ const Admin = () => {
     const [deleteItems, setDeleteItems] = useState([]);
     const [editObj, setEditObj] = useState(null);
 
-    useEffect(() => {
-        if (!JSON.parse(localStorage.getItem("AdminData"))) {
-            fetch('https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json')
-                .then(response => response.json())
-                .then((data) => {
-                    setData(data);
-                    localStorage.setItem("AdminData", JSON.stringify(data));
-                    console.log(data);
-                })
-                .catch(error => console.error(error));
-        }
-        if (data) {
-            if(data.length === 0){
-                setPages(1);
-            }
-            else{
-                setPages(parseInt(data.length%10 !==0 ? data.length / 10 + 1 : data.length/10));
-            }
-        }
-        viewPage();
-    }, [data, viewPage]);
+
 
     const deleteItem = (id) => {
         let answer = prompt("Type 'Delete' to delete this item");
@@ -58,22 +38,21 @@ const Admin = () => {
         filterData(searchValue);
     }
 
-    const filterData = (filterValue) => {
+    const filterData = useCallback( (filterValue) => {
         const list = JSON.parse(localStorage.getItem("AdminData"));
         const filteredData = list?.filter((item) => item.name.includes(filterValue) || item.email.includes(filterValue) || item.role.includes(filterValue)) || [];
         setData(filteredData);
         let len = filteredData.length !== 0 ?( filteredData.length%10 !== 0 ? filteredData.length/10 : filteredData.length/10 - 1):0;
         setPages(parseInt(len + 1));
-        viewPage();
-    }
+    },[])
 
-    const viewPage = () => {
+    const viewPage = useCallback(()=>{
         if(curPageNo > pages){
             setCurPageNo(pages);
         }
         setDataInCurrentPage(data?.slice((curPageNo - 1) * 10,(curPageNo - 1) * 10 + 10));
         return;
-    }
+    },[curPageNo,pages,data]);
     
     function handleMovePage(action){
         switch(action){
@@ -128,6 +107,28 @@ const Admin = () => {
         setDeleteItems([]);
     }
 
+    useEffect(() => {
+        if (!JSON.parse(localStorage.getItem("AdminData"))) {
+            fetch('https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json')
+                .then(response => response.json())
+                .then((data) => {
+                    setData(data);
+                    localStorage.setItem("AdminData", JSON.stringify(data));
+                    console.log(data);
+                })
+                .catch(error => console.error(error));
+        }
+        if (data) {
+            if(data.length === 0){
+                setPages(1);
+            }
+            else{
+                setPages(parseInt(data.length%10 !==0 ? data.length / 10 + 1 : data.length/10));
+            }
+        }
+        viewPage();
+    }, [data, viewPage]);
+
     useEffect(()=>{
         const timeoutId = setTimeout(() => {
             // console.log("curpageno in debounce : ",curPageNo);
@@ -141,14 +142,14 @@ const Admin = () => {
 
     useEffect(()=>{
         const ids = deleteItems?.map((id)=>id);
-        dataInCurrentPage?.map((item)=>{
+        dataInCurrentPage?.forEach((item)=>{
             if(ids.find((id)=>id === item.id)){
                 document.getElementById(item.id).checked = true;
             }
             else{
                 document.getElementById(item.id).checked = false;
             }
-            return;
+            
         })
 
         //if all the item of the page is present in deleteItems then setsupercheckbox true
